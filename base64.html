@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Conversión de Imagen a Base64</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        textarea { width: 100%; height: 150px; margin-bottom: 10px; }
+        img { max-width: 200px; margin-top: 10px; display: block; }
+        button { margin-top: 10px; padding: 8px 12px; cursor: pointer; }
+        .image-block { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Convertir Imágenes a Base64</h2>
+    <input type="file" id="fileInput" accept="image/*" multiple>
+    <br><br>
+    <div id="results"></div>
+    <button id="downloadBtn">Descargar Base64 en TXT</button>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const results = document.getElementById('results');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        let base64List = [];
+
+        fileInput.addEventListener('change', function(event) {
+            const files = event.target.files;
+            results.innerHTML = "";
+            base64List = [];
+
+            Array.from(files).forEach((file, index) => {
+                if (!file.type.startsWith('image/')) {
+                    alert("El archivo " + file.name + " no es una imagen.");
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64String = e.target.result;
+                    base64List.push(base64String);
+
+                    const block = document.createElement('div');
+                    block.className = "image-block";
+
+                    const textarea = document.createElement('textarea');
+                    textarea.value = base64String;
+                    textarea.readOnly = true;
+
+                    const img = document.createElement('img');
+                    img.src = base64String;
+
+                    const copyBtn = document.createElement('button');
+                    copyBtn.textContent = "Copiar al portapapeles";
+                    copyBtn.addEventListener('click', () => {
+                        navigator.clipboard.writeText(base64String).then(() => {
+                            alert("¡Base64 copiado!");
+                        });
+                    });
+
+                    block.appendChild(textarea);
+                    block.appendChild(copyBtn);
+                    block.appendChild(img);
+                    results.appendChild(block);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        downloadBtn.addEventListener('click', function() {
+            if (base64List.length === 0) {
+                alert("No hay nada que descargar. Primero selecciona imágenes.");
+                return;
+            }
+            const blob = new Blob(base64List.map(b64 => b64 + "\n\n"), { type: "text/plain" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = "imagenes_base64.txt";
+            link.click();
+        });
+    </script>
+</body>
+</html>
